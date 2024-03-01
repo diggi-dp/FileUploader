@@ -9,10 +9,10 @@ exports.uploadFile = async (userId, filename, fileContent,accessCode) => {
         }
 
         // Add the new file to the user's files array
-        user.files.push({ filename:filename, code:accessCode, url:fileContent });
+        user.files.push({ filename:filename, code:+(accessCode), url:fileContent });
         await user.save();
 
-        return { message: 'File uploaded successfully' };
+        return { message: 'File uploaded successfully', accessCode:accessCode };
     } catch (error) {
         throw error;
     }

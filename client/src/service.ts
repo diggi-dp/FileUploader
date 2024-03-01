@@ -33,13 +33,13 @@ export const signup = async (username:string, password:string) => {
 };
 
 // File Service Functions
-export const uploadFile = async (file: string | Blob) => {
+export const uploadFile = async (formData: any) => {
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    await axios.post(`${API_BASE_URL}/file/upload`, formData, {
+    const res = await axios.post(`${API_BASE_URL}/file/upload`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
+    console.log(res)
+    return res.data
   } catch (error : any) {
     throw error.response.data.message;
   }
@@ -62,7 +62,7 @@ export const deleteFile = async (fileId: string) => {
   }
 };
 
-export const downloadFile = async (fileId: string, accessCode: number) => {
+export const downloadFile = async (fileId: string, accessCode: any) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/file/download/${fileId}`, { accessCode });
     return response.data;

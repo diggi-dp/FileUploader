@@ -1,5 +1,5 @@
 const fileService = require('../services/fileService');
-const { getUserIdFromToken } = require('../utils/common')
+const { getUserIdFromToken, generateUniqueCode } = require('../utils/common')
 
 exports.upload = async (req, res) => {
     const token = req.headers.authorization.split(' ')[1];
@@ -7,9 +7,9 @@ exports.upload = async (req, res) => {
     try {
         const { originalname } = req.file;
         const fileContent = req.file.buffer.toString('base64');
-        const accessCode = req.body.accessCode;
+        const accessCode = generateUniqueCode()
         const file = await fileService.uploadFile(userId, originalname, fileContent, accessCode);
-        res.status(200).json({ message: file.message });
+        res.status(200).json(file);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error uploading file' });
@@ -46,7 +46,7 @@ exports.downloadFile = async (req, res) => {
 
     const { accessCode } = req.body;
 
-    if (!accessCode || typeof accessCode !== 'number') {
+    if (!accessCode) {
         return res.status(400).json({ message: 'Access code is required and must be a number' });
     }
 
@@ -55,9 +55,9 @@ exports.downloadFile = async (req, res) => {
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
         }
-
+        console.log({'accessCode':accessCode,'ac':file.code})
         // Check if the access code matches the file's code
-        if (accessCode !== file.code) {
+        if (accessCode != file.code) {
             return res.status(403).json({ message: 'Access code is incorrect' });
         }
 

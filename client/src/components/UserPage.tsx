@@ -1,32 +1,34 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { downloadFile, getFiles, uploadFile } from '@/service';
 
 const UserPage = () => {
   const [userName, setUserName] = useState<string | null>(null);
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState<any>(null);
 
-  // Fetch user information and list of files
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get('/api/user');
-        // setUser(response.data.user);
-        setFiles(response.data.files);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
+  const getAllFiles = async () => {
+    try {
+      const res = await getFiles()
+      if (res) {
+        setFiles(res)
       }
-    };
-    // fetchUserData();
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    getAllFiles()
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     const username = localStorage.getItem('username')
-    if(username){
+    if (username) {
       setUserName(username)
     }
-  },[])
+  }, [])
 
   // Function to handle file selection for upload
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,15 +44,14 @@ const UserPage = () => {
     const formData = new FormData();
     formData.append('file', selectedFile);
     try {
-      await axios.post('/api/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      // Refresh file list after upload
-      const response = await axios.get('/api/files');
-      setFiles(response.data.files);
+      const res: any = await uploadFile(formData)
+
       setSelectedFile(null);
+      getAllFiles()
+      if (res) {
+        alert(`your file is uploaded and your accessCode for the file is ${res.accessCode}`)
+      }
+      // Refresh file list after upload
     } catch (error) {
       console.error('Error uploading file:', error);
     }
@@ -69,15 +70,18 @@ const UserPage = () => {
   };
 
   // Function to download a file
-  const handleDownload = async (filename: string) => {
+  const handleDownload = async (file : any) => {
+    const code = prompt("Please enter your Access Code")
+
+    if (!code) {
+      return
+    }
     try {
-      const response = await axios.get(`/api/download/${filename}`, {
-        responseType: 'blob' // Ensure response is treated as binary data
-      });
+      const response = await downloadFile(file._id, code)
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', filename);
+      link.setAttribute('download', file.filename);
       document.body.appendChild(link);
       link.click();
     } catch (error) {
@@ -92,23 +96,26 @@ const UserPage = () => {
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Welcome, {userName}</h1>
 
           <div className="mt-4">
-            <input type="file" className="border border-gray-300 p-2 rounded-md" onChange={handleFileChange} />
+            <input type="file" className="border border-gray-300 text-black p-2 rounded-md" onChange={handleFileChange} />
+            {
+              selectedFile && <span>{selectedFile.name}</span>
+            }
             <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 ml-2 rounded-md" onClick={handleUpload}>Upload</button>
           </div>
 
           <h2 className="text-xl font-semibold text-gray-700 mb-2 mt-2">Your Files:</h2>
           <ul className="space-y-2">
-            {files.map((file, index) => (
+            {files.map((file: any, index) => (
               <li key={index} className="flex items-center justify-between">
-                <span className="text-gray-700">{'iunoiii'}</span>
+                <span className="text-gray-700">{file?.filename}</span>
                 <div>
-                  <button className="text-blue-500 hover:text-blue-700 mr-2" onClick={() => handleDownload('jhhj')}>Download</button>
-                  <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete('jkbj')}>Delete</button>
+                  <button className="text-blue-500 hover:text-blue-700 mr-2" onClick={() => handleDownload(file)}>Download</button>
+                  <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete(file._id)}>Delete</button>
                 </div>
               </li>
             ))}
           </ul>
-        
+
         </div>
       )}
     </div>
