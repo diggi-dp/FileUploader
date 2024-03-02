@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { downloadFile, getFiles, uploadFile } from '@/service';
+import { deleteFile, downloadFile, getFiles, uploadFile } from '@/service';
 
 const UserPage = () => {
   const [userName, setUserName] = useState<string | null>(null);
@@ -60,10 +60,12 @@ const UserPage = () => {
   // Function to delete a file
   const handleDelete = async (fileId: any) => {
     try {
-      await axios.delete(`/api/files/${fileId}`);
-      // Refresh file list after deletion
-      const response = await axios.get('/api/files');
-      setFiles(response.data.files);
+      const res:any = await deleteFile(fileId)
+      if(res){
+        getAllFiles()
+        alert(res.data.message)
+      }
+      
     } catch (error) {
       console.error('Error deleting file:', error);
     }

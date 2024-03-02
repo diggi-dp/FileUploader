@@ -32,8 +32,8 @@ exports.deleteFile = async (req, res) => {
     const token = req.headers.authorization.split(' ')[1];
     const userId = await getUserIdFromToken(token)
     try {
-        await fileService.deleteFile(userId, req.params.fileId);
-        res.status(200).json({ message: 'File deleted successfully' });
+        const response = await fileService.deleteFile(userId, req.params.fileId);
+        res.status(200).json(response);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error deleting file' });
